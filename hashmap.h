@@ -10,6 +10,7 @@
 #define VALUE_SIZE 100
 #define MAP_LEN 1000
 
+
 	/*
 	 * Data stored in hashmap
 	 */

@@ -1,10 +1,9 @@
-	#include "hashmap.h"
-	#include <limits.h>
-	// https://stackoverflow.com/questions/20462826/hash-function-for-strings-in-c
+#include "hashmap.h"
+#include <limits.h>
 int hash(char *word)
 {
-	int hash = 0, c;
-	size_t i;
+	int hash = 0, c = 0;
+	size_t i = 0;
 
 	for (i = 0; word[i] != '\0'; i++) {
 		if (isalpha(word[i]) || isdigit(word[i])) {
@@ -20,11 +19,11 @@ int hash(char *word)
 
 MyHashMap *create(void)
 {
-	/*
-	 *	Alloc memory for the hashmap, after that
-	 *	alloc memory for the pointers
-	 */
-	int i;
+/*
+	*	Alloc memory for the hashmap, after that
+	*	alloc memory for the pointers
+	*/
+	int i = 0, j = 0;
 	MyHashMap *m = calloc(1, sizeof(MyHashMap));
 
 	if (m == NULL)
@@ -38,10 +37,10 @@ MyHashMap *create(void)
 	for (i = 0; i < MAP_LEN; i++) {
 		m->table[i] = calloc(1, sizeof(const struct node));
 		if (m->table[i] == NULL) {
-			for (int j = 0; j < MAP_LEN; j++) {
-				if (m->table[j] != NULL)
+			for (j = 0; j < MAP_LEN; j++) {
 					free(m->table[j]);
 			}
+			free(m->table);
 			free(m);
 			return NULL;
 		}
@@ -50,7 +49,7 @@ MyHashMap *create(void)
 	}
 	m->table_size = 0;
 	return m;
-	}
+}
 
 void put(MyHashMap *obj, char *key, char *value)
 {
@@ -92,6 +91,10 @@ void *get(MyHashMap *obj, char *key)
 
 void removeVal(MyHashMap *obj, char *key)
 {
+	/*
+	 *	remove the value from map
+	 *  insert the new one instead
+	 */
 	free(obj->table[hash(key)]->key);
 	obj->table[hash(key)]->key = NULL;
 

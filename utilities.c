@@ -1,13 +1,15 @@
 #include "utilities.h"
 
+
 void param_D(int number_args, char **arguments, MyHashMap *obj, char *arg,
 		int len, int *i)
 {
 	int new_pos = 0, pos = 0, val_pos = 0;
-	char name_define[256], val_define[256];
+	char name_define[256] = {0};
+	char val_define[256] = {0};
 
-	strcpy(name_define, "");
-	strcpy(val_define, "");
+	strncpy(name_define, "", 256);
+	strncpy(val_define, "", 256);
 	if (len != 2) {
 		val_pos = 0;
 		pos = 0;
@@ -43,26 +45,26 @@ void param_D(int number_args, char **arguments, MyHashMap *obj, char *arg,
 		}
 		val_define[val_pos] = '\0';
 	}
-	if (strcmp(val_define, "") == 0)
+	if (strncmp(val_define, "", 1) == 0)
 		put(obj, name_define, "");
 	else
 		put(obj, name_define, val_define);
 
-	strcpy(name_define, "");
-	strcpy(val_define, "");
+	strncpy(name_define, "", 256);
+	strncpy(val_define, "", 256);
 }
 
 void param_O(int number_args, char **arguments, MyHashMap *obj, char *arg,
 			int len, int *i)
 {
-	int new_pos;
-	char value[LINE_SIZE];
+	int new_pos = 0;
+	char value[LINE_SIZE] = {0};
 
 	new_pos = 0;
 	memset(value, 0, LINE_SIZE);
 
 	if (len == 2) {
-		strcpy(value, arguments[++*i]);
+		strncpy(value, arguments[++*i], LINE_SIZE);
 	} else {
 		for (new_pos = 2; new_pos < len; new_pos++)
 			value[new_pos - 2] = arg[new_pos];
@@ -76,11 +78,11 @@ void param_I(int number_args, char **arguments, MyHashMap *obj, char *arg,
 		char directory[NR_DIRECTORIES][LENGTH_NAME_DIRECTORY])
 {
 	int new_pos = 0, pos = 0;
-	char name_define[256], val_define[256];
-	static int l;
+	char name_define[256] = {0};
+	char val_define[256] = {0};
 
-	strcpy(name_define, "");
-	strcpy(val_define, "");
+	strncpy(name_define, "", 256);
+	strncpy(val_define, "", 256);
 
 	if (len != 2) {
 		for (new_pos = 3; new_pos < len; new_pos++)
@@ -93,9 +95,8 @@ void param_I(int number_args, char **arguments, MyHashMap *obj, char *arg,
 	}
 
 	val_define[pos] = '\0';
-	strcpy(directory[l++], val_define);
-	size_directory = l;
-	strcpy(val_define, "");
+	strncpy(directory[size_directory++], val_define, 256);
+	strncpy(val_define, "", 256);
 }
 
 void check_params(int number_args, char **arguments,
@@ -126,7 +127,8 @@ void check_params(int number_args, char **arguments,
 
 void removeChar(char *str, char garbage)
 {
-	char *src, *dst;
+	char *src = NULL;
+	char *dst = NULL;
 
 	for (src = dst = str; *src != '\0'; src++) {
 		*dst = *src;
@@ -138,9 +140,14 @@ void removeChar(char *str, char garbage)
 
 void resolve_define(char *text, MyHashMap *obj, FILE *fp)
 {
-	char *token, *key, *ans;
-	char auxiliar_space[LINE_SIZE], line[LINE_SIZE], value[LINE_SIZE];
-	int len, find = 0;
+	char *token = NULL;
+	char *key = NULL;
+	char *ans = NULL;
+	char auxiliar_space[LINE_SIZE] = {0};
+	char line[LINE_SIZE] = {0};
+	char value[LINE_SIZE] = {0};
+	int len = 0;
+	int find = 0;
 
 	memset(auxiliar_space, 0, LINE_SIZE);
 	memset(line, 0, LINE_SIZE);
@@ -149,12 +156,12 @@ void resolve_define(char *text, MyHashMap *obj, FILE *fp)
 	key = token;
 	token = strtok(NULL, " ");
 
-	while (token != NULL && strcmp(token, "\\") != 0) {
+	while (token != NULL && strncmp(token, "\\", 2) != 0) {
 		ans = (char *)get(obj, token);
 		find = 0;
 		while (ans) {
 			if (ans) {
-				strcat(auxiliar_space, ans);
+				strncat(auxiliar_space, ans, LINE_SIZE);
 				ans = (char *)get(obj, ans);
 				find = 1;
 			} else {
@@ -162,12 +169,12 @@ void resolve_define(char *text, MyHashMap *obj, FILE *fp)
 			}
 		}
 		if (!find)
-			strcat(auxiliar_space, token);
+			strncat(auxiliar_space, token, LINE_SIZE);
 
 		token = strtok(NULL, " ");
 
 		if (token != NULL)
-			strcat(auxiliar_space, " ");
+			strncat(auxiliar_space, " ", LINE_SIZE);
 	}
 
 	if (token != NULL && strcmp(token, "\\") == 0) {
@@ -182,8 +189,8 @@ void resolve_define(char *text, MyHashMap *obj, FILE *fp)
 			token = strtok(line, " ");
 
 			while (token != NULL) {
-				strcat(auxiliar_space, token);
-				strcat(auxiliar_space, " ");
+				strncat(auxiliar_space, token, LINE_SIZE);
+				strncat(auxiliar_space, " ", LINE_SIZE);
 				if (strstr(token, "\\"))
 					removeChar(auxiliar_space, '\\');
 				token = strtok(NULL, " ");
@@ -199,24 +206,24 @@ void resolve_define(char *text, MyHashMap *obj, FILE *fp)
 			}
 		}
 	}
-	strcat(value, auxiliar_space);
+	strncat(value, auxiliar_space, LINE_SIZE);
 	put(obj, key, value);
 }
 
 void put_values_text(MyHashMap *obj, char *line, char *buffer)
 {
-	int i, j, len, counter;
-	char word[WORD_SIZE], *ans;
+	int i = 0;
+	int j = 0;
+	int len = 0;
+	int counter = 0;
+	char word[WORD_SIZE] = {0};
+	char *ans = NULL;
 
-	i = 0;
-	j = 0;
 	line[strlen(line)] = '\0';
 	len = strlen(line);
-	counter = 0;
-	memset(word, 0, WORD_SIZE);
 
 	if (line[0] == ' ' || line[0] == '\t')
-		strcat(buffer, " ");
+		strncat(buffer, " ", 1);
 
 	for (i = 0; i < len; i++) {
 		if (line[i] == '"') {
@@ -229,8 +236,8 @@ void put_values_text(MyHashMap *obj, char *line, char *buffer)
 			}
 			word[counter] = '\0';
 			removeChar(word, '\t');
-			strcat(buffer, word);
-			strcpy(word, "");
+			strncat(buffer, word, BUFFER_SIZE);
+			strncpy(word, "", WORD_SIZE);
 			counter = 0;
 			i = j;
 		} else if (!isalpha(line[i])) {
@@ -241,8 +248,8 @@ void put_values_text(MyHashMap *obj, char *line, char *buffer)
 			}
 			word[counter] = '\0';
 			removeChar(word, '\t');
-			strcat(buffer, word);
-			strcpy(word, "");
+			strncat(buffer, word, BUFFER_SIZE);
+			strncpy(word, "", WORD_SIZE);
 			counter = 0;
 			i = j - 1;
 		} else if (isalpha(line[i])) {
@@ -253,20 +260,20 @@ void put_values_text(MyHashMap *obj, char *line, char *buffer)
 
 			word[counter] = '\0';
 			ans = (char *)get(obj, word);
-			if (strcmp(word, "input") != 0
-				&& strcmp(word, "output") != 0
+			if (strncmp(word, "input", 5) != 0
+				&& strncmp(word, "output", 6) != 0
 				&& ans)
-				strcpy(word, ans);
+				strncpy(word, ans, WORD_SIZE);
 
-			if (strcmp(word, "input") == 0)
-				strcpy(word, "input");
+			if (strncmp(word, "input", 5) == 0)
+				strncpy(word, "input", WORD_SIZE);
 
-			if (strcmp(word, "output") == 0)
-				strcpy(word, "output");
+			if (strncmp(word, "output", 6) == 0)
+				strncpy(word, "output", WORD_SIZE);
 
 			removeChar(word, '\t');
-			strcat(buffer, word);
-			strcpy(word, "");
+			strncat(buffer, word, BUFFER_SIZE);
+			strncpy(word, "", WORD_SIZE);
 			counter = 0;
 			i = j - 1;
 		}
@@ -290,7 +297,7 @@ void help_ifdef(char *text, MyHashMap *obj, FILE *fp, char *buffer)
 void resolve_ifdef_ifndef(char *text, MyHashMap *obj, FILE *fp,
 						char *buffer, int type)
 {
-	char *answer;
+	char *answer = NULL;
 
 	answer = (char *)get(obj, text);
 	/*
@@ -306,17 +313,17 @@ void resolve_ifdef_ifndef(char *text, MyHashMap *obj, FILE *fp,
 			fgets(text, LINE_SIZE, fp);
 			text[strlen(text) - 1] = '\0';
 
-			if (strcmp(text, "#endif") == 0)
+			if (strncmp(text, "#endif", 6) == 0)
 				return;
 
-			if (strcmp(text, "#else") == 0) {
-				while (strcmp(text, "#endif") != 0) {
+			if (strncmp(text, "#else", 5) == 0) {
+				while (strncmp(text, "#endif", 6) != 0) {
 					fgets(text, LINE_SIZE, fp);
 					text[strlen(text) - 1] = '\0';
 				}
 				return;
 			}
-			strcat(text, "\n");
+			strncat(text, "\n", LINE_SIZE);
 			help_ifdef(text, obj, fp, buffer);
 		}
 	}
@@ -337,17 +344,17 @@ void resolve_ifdef_ifndef(char *text, MyHashMap *obj, FILE *fp,
 
 			text[strlen(text) - 1] = '\0';
 
-			if (strcmp(text, "#endif") == 0)
+			if (strncmp(text, "#endif", 6) == 0)
 				return;
 
-			if (strcmp(text, "#else") == 0) {
-				while (strcmp(text, "#endif") != 0) {
+			if (strncmp(text, "#else", 5) == 0) {
+				while (strncmp(text, "#endif", 6) != 0) {
 					fgets(text, LINE_SIZE, fp);
 					text[strlen(text) - 1] = '\0';
 				}
 				return;
 			}
-			strcat(text, "\n");
+			strncat(text, "\n", LINE_SIZE);
 			help_ifdef(text, obj, fp, buffer);
 		}
 	}
@@ -356,11 +363,11 @@ void resolve_ifdef_ifndef(char *text, MyHashMap *obj, FILE *fp,
 	 * verifi the clause and after that evaluate
 	 */
 
-	if ((type == 3 && (strcmp(text, "1") == 0 ||
-		strcmp(text, "TRUE") == 0)) ||
+	if ((type == 3 && (strncmp(text, "1", 1) == 0 ||
+		strncmp(text, "TRUE", 4) == 0)) ||
 		(type == 3 && answer != NULL &&
-		((strcmp(answer, "0") != 0) ||
-		(strcmp(answer, "TRUE") == 0)))) {
+		((strncmp(answer, "0", 1) != 0) ||
+		(strncmp(answer, "TRUE", 4) == 0)))) {
 
 		fgets(text, LINE_SIZE, fp);
 		help_ifdef(text, obj, fp, buffer);
@@ -369,18 +376,18 @@ void resolve_ifdef_ifndef(char *text, MyHashMap *obj, FILE *fp,
 			fgets(text, LINE_SIZE, fp);
 			text[strlen(text) - 1] = '\0';
 
-			if (strcmp(text, "#endif") == 0)
+			if (strncmp(text, "#endif", 6) == 0)
 				return;
 
-			if (strcmp(text, "#else") == 0) {
-				while (strcmp(text, "#endif") != 0) {
+			if (strncmp(text, "#else", 5) == 0) {
+				while (strncmp(text, "#endif", 6) != 0) {
 					fgets(text, LINE_SIZE, fp);
 					text[strlen(text) - 1] = '\0';
 				}
 				return;
 			}
 
-			strcat(text, "\n");
+			strncat(text, "\n", LINE_SIZE);
 			help_ifdef(text, obj, fp, buffer);
 		}
 	}
@@ -397,7 +404,7 @@ void resolve_ifdef_ifndef(char *text, MyHashMap *obj, FILE *fp,
 	 * Neither of the clauses were true so we have the last else
 	 */
 
-	if (strcmp(text, "#else") == 0) {
+	if (strncmp(text, "#else", 5) == 0) {
 		fgets(text, LINE_SIZE, fp);
 		help_ifdef(text, obj, fp, buffer);
 
@@ -408,13 +415,12 @@ void resolve_ifdef_ifndef(char *text, MyHashMap *obj, FILE *fp,
 	/*
 	 * Final of statement
 	 */
-	if (strcmp(text, "#endif") == 0)
+	if (strncmp(text, "#endif", 6) == 0)
 		return;
 
 	fgets(text, LINE_SIZE, fp);
 	text[strlen(text) - 1] = '\0';
 	resolve_ifdef_ifndef(text, obj, fp, buffer, 3);
-	return;
 }
 
 int resolve_include(char *line, MyHashMap *obj, char *buffer, FILE *fp,
@@ -545,7 +551,8 @@ int open_input(char *input_file, MyHashMap *obj,
 {
 	FILE *fp = NULL;
 	FILE *fo = NULL;
-	char buffer[BUFFER_SIZE], *ans;
+	char buffer[BUFFER_SIZE] = {0};
+	char *ans = NULL;
 
 	fp = fopen(input_file, "r");
 	memset(buffer, 0, BUFFER_SIZE);
@@ -558,7 +565,7 @@ int open_input(char *input_file, MyHashMap *obj,
 		return 0;
 	}
 
-	strcat(buffer, "\n");
+	strncat(buffer, "\n", BUFFER_SIZE);
 	ans = (char *)get(obj, "output");
 	if (ans) {
 		fo = fopen(ans, "w");
@@ -566,7 +573,7 @@ int open_input(char *input_file, MyHashMap *obj,
 			fclose(fp);
 			return 0;
 		}
-		strcat(buffer, "\n");
+		strncat(buffer, "\n", BUFFER_SIZE);
 		fprintf(fo, "%s", buffer);
 		fclose(fo);
 	} else {

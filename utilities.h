@@ -1,15 +1,15 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 #include "hashmap.c"
-#include <errno.h>
 
+#define ENOMEM 12
 #define LINE_SIZE 256
 #define BUFFER_SIZE 8192
 #define WORD_SIZE 512
 #define NR_DIRECTORIES 512
 #define LENGTH_NAME_DIRECTORY 1024
+int size_directory;
 
-static int size_directory;
 void check_params(int number_args, char **arguments, MyHashMap *obj,
 		char directories[NR_DIRECTORIES][LENGTH_NAME_DIRECTORY]);
 
@@ -27,4 +27,17 @@ void param_I(int number_args, char **arguments, MyHashMap *obj, char *arg,
 
 void param_D(int number_args, char **arguments, MyHashMap *obj, char *arg,
 			int len, int *i);
+char *strnstr(const char *s, const char *find, size_t slen);
+void removeChar(char *str, char garbage);
+void put_values_text(MyHashMap *obj, char *line, char *buffer);
+void help_ifdef(char *text, MyHashMap *obj, FILE *fp, char *buffer);
+void resolve_ifdef_ifndef(char *text, MyHashMap *obj, FILE *fp,
+						char *buffer, int type);
+int resolve_include(char *line, MyHashMap *obj, char *buffer, FILE *fp,
+		char *input_file,
+		char directories[NR_DIRECTORIES][LENGTH_NAME_DIRECTORY]);
+int read_from_file(FILE *fp, MyHashMap *obj, char *buffer,
+		char *input_file,
+		char directories[NR_DIRECTORIES][LENGTH_NAME_DIRECTORY]);
+
 #endif
