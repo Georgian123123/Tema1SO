@@ -1,5 +1,8 @@
 #include "hashmap.h"
 #include <limits.h>
+	/*
+	 *	hash function for hashmap
+	 */
 int hash(char *word)
 {
 	int hash = 0, c = 0;
@@ -19,17 +22,17 @@ int hash(char *word)
 
 MyHashMap *create(void)
 {
-/*
-	*	Alloc memory for the hashmap, after that
-	*	alloc memory for the pointers
-	*/
+	/*
+	 * Alloc memory for the hashmap, after that
+	 * alloc memory for the pointers
+	 */
 	int i = 0, j = 0;
-	MyHashMap *m = calloc(1, sizeof(MyHashMap));
+	MyHashMap *m = (MyHashMap *) calloc(1, sizeof(MyHashMap));
 
 	if (m == NULL)
 		return NULL;
 
-	m->table = calloc(MAP_LEN, sizeof(const struct node *));
+	m->table = (struct node **)calloc(MAP_LEN, sizeof(const struct node *));
 	if (m->table == NULL) {
 		free(m);
 		return NULL;
@@ -37,21 +40,21 @@ MyHashMap *create(void)
 	for (i = 0; i < MAP_LEN; i++) {
 		m->table[i] = calloc(1, sizeof(const struct node));
 		if (m->table[i] == NULL) {
-			for (j = 0; j < MAP_LEN; j++) {
-					free(m->table[j]);
-			}
+			for (j = 0; j < MAP_LEN; j++)
+				free(m->table[j]);
 			free(m->table);
 			free(m);
 			return NULL;
 		}
 		m->table[i]->key = NULL;
 		m->table[i]->value = NULL;
+
 	}
 	m->table_size = 0;
 	return m;
 }
 
-void put(MyHashMap *obj, char *key, char *value)
+int put(MyHashMap *obj, char *key, char *value)
 {
 	int length_key = hash(key), added = 0;
 	/*
@@ -71,12 +74,17 @@ void put(MyHashMap *obj, char *key, char *value)
 	 */
 	obj->table[length_key]->key = calloc(strlen(key) + 1, sizeof(char));
 	obj->table[length_key]->value = calloc(strlen(value) + 1, sizeof(char));
+	if (obj->table[length_key]->key == NULL)
+		return 0;
+	if (obj->table[length_key]->value == NULL)
+		return 0;
 	strcpy(obj->table[length_key]->key, key);
 	strcpy(obj->table[length_key]->value, value);
 
 	if (added == 0)
 		obj->table_size++;
 
+	return 1;
 }
 
 void *get(MyHashMap *obj, char *key)
@@ -85,7 +93,7 @@ void *get(MyHashMap *obj, char *key)
 	 * If there's nothing return nill
 	 * otherwise return the data
 	 */
-	return obj->table[hash(key)] != NULL ?
+	return obj->table[hash(key)]->key != NULL ?
 			obj->table[hash(key)]->value : NULL;
 	}
 

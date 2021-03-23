@@ -1,7 +1,22 @@
 #include "utilities.h"
 
-
-void param_D(int number_args, char **arguments, MyHashMap *obj, char *arg,
+/*
+ *@params
+ *number_args - number of arguments from the command line
+ * arguments - arguments from the command line
+ * obj - hashmap
+ * arg - the current argument
+ * len - length of the argument
+ * i - position of the argument
+ *
+ * @value
+ * the value of this function is splitting the key and value from
+ * the define directive
+ *
+ * This comment should be for the next functions like: param_O
+ * param_I
+ */
+int param_D(int number_args, char **arguments, MyHashMap *obj, char *arg,
 		int len, int *i)
 {
 	int new_pos = 0, pos = 0, val_pos = 0;
@@ -45,16 +60,20 @@ void param_D(int number_args, char **arguments, MyHashMap *obj, char *arg,
 		}
 		val_define[val_pos] = '\0';
 	}
-	if (strncmp(val_define, "", 1) == 0)
-		put(obj, name_define, "");
-	else
-		put(obj, name_define, val_define);
+	if (strncmp(val_define, "", 1) == 0) {
+		if (put(obj, name_define, "") == 0)
+			return 0;
+	} else {
+		if (put(obj, name_define, val_define) == 0)
+			return 0;
+	}
 
 	strncpy(name_define, "", 256);
 	strncpy(val_define, "", 256);
+	return 1;
 }
 
-void param_O(int number_args, char **arguments, MyHashMap *obj, char *arg,
+int param_O(int number_args, char **arguments, MyHashMap *obj, char *arg,
 			int len, int *i)
 {
 	int new_pos = 0;
@@ -70,7 +89,9 @@ void param_O(int number_args, char **arguments, MyHashMap *obj, char *arg,
 			value[new_pos - 2] = arg[new_pos];
 		value[new_pos++] = '\0';
 	}
-	put(obj, "output", value);
+	if (put(obj, "output", value) == 0)
+		return 0;
+	return 1;
 }
 
 void param_I(int number_args, char **arguments, MyHashMap *obj, char *arg,
@@ -99,32 +120,59 @@ void param_I(int number_args, char **arguments, MyHashMap *obj, char *arg,
 	strncpy(val_define, "", 256);
 }
 
-void check_params(int number_args, char **arguments,
+/*
+ * @params
+ * number_args - number of arguments
+ * arguments - the arguments from the command line
+ * directories - the directories included from the -I param
+ *
+ * @value
+ * The value of this function is:
+ * separate each param from the command line and extract the values
+ */
+int check_params(int number_args, char **arguments,
 			MyHashMap *obj,
 			char directories[NR_DIRECTORIES][LENGTH_NAME_DIRECTORY])
 {
-	int len = 0;
+	int len = 0, i = 0;
 	char *arg = NULL;
 
-	for (int i = 1; i < number_args; i++) {
+	for (i = 1; i < number_args; i++) {
 		arg = arguments[i];
 		len = strlen(arg);
 		if (strncmp(arg, "-D", 2) == 0) {
-			param_D(number_args, arguments, obj, arg, len, &i);
+			if (param_D(number_args, arguments,
+				obj, arg, len, &i) == 0)
+				return 0;
 		} else if (strncmp(arg, "-I", 2) == 0) {
 			param_I(number_args, arguments, obj,
 					arg, len, &i, directories);
 		} else if (strncmp(arg, "-o", 2) == 0) {
-			param_O(number_args, arguments, obj, arg, len, &i);
+			if (param_O(number_args, arguments,
+					obj, arg, len, &i) == 0)
+				return 0;
 		} else {
-			if (strstr(arg, ".out"))
-				put(obj, "output", arg);
-			else
-				put(obj, "input", arg);
+			if (strstr(arg, ".out")) {
+				if (put(obj, "output", arg) == 0)
+					return 0;
+			} else {
+				if (put(obj, "input", arg) == 0)
+					return 0;
+			}
 		}
 	}
+	return 1;
 }
 
+/*
+ * @params
+ * str - the string where the garbage character will be removed
+ * garbage - character that will be removed
+ *
+ * @value
+ * The value of this function is that:
+ * It will remove from the str all the garbage characters
+ */
 void removeChar(char *str, char garbage)
 {
 	char *src = NULL;
@@ -138,6 +186,17 @@ void removeChar(char *str, char garbage)
 	*dst = '\0';
 }
 
+/*
+ * @params
+ * text - the string to be splitted
+ * obj - the hashmap
+ * fp - the file descriptor from the input file
+ *
+ * @value
+ * The value of this function is:
+ * at the final of the function in the map will be the
+ * key - value object, from the define directive
+ */
 void resolve_define(char *text, MyHashMap *obj, FILE *fp)
 {
 	char *token = NULL;
@@ -174,7 +233,7 @@ void resolve_define(char *text, MyHashMap *obj, FILE *fp)
 		token = strtok(NULL, " ");
 
 		if (token != NULL)
-			strncat(auxiliar_space, " ", LINE_SIZE);
+			strncat(auxiliar_space, " ", 1);
 	}
 
 	if (token != NULL && strcmp(token, "\\") == 0) {
@@ -190,7 +249,7 @@ void resolve_define(char *text, MyHashMap *obj, FILE *fp)
 
 			while (token != NULL) {
 				strncat(auxiliar_space, token, LINE_SIZE);
-				strncat(auxiliar_space, " ", LINE_SIZE);
+				strncat(auxiliar_space, " ", 1);
 				if (strstr(token, "\\"))
 					removeChar(auxiliar_space, '\\');
 				token = strtok(NULL, " ");
@@ -210,6 +269,19 @@ void resolve_define(char *text, MyHashMap *obj, FILE *fp)
 	put(obj, key, value);
 }
 
+/*
+ * @params
+ * obj - the hashmap
+ * line - the string in which it will be replaced the strings
+ * from the define directive
+ * buffer - all the text from the input file untill this moment
+ *
+ * @value
+ * The value of the function is:
+ * At the final of the function all the key from the hashmap
+ * that will match the word in the stirng it will be replaced
+ * with the values in this string
+ */
 void put_values_text(MyHashMap *obj, char *line, char *buffer)
 {
 	int i = 0;
@@ -223,7 +295,7 @@ void put_values_text(MyHashMap *obj, char *line, char *buffer)
 	len = strlen(line);
 
 	if (line[0] == ' ' || line[0] == '\t')
-		strncat(buffer, " ", 1);
+		strncat(buffer, " ", 2);
 
 	for (i = 0; i < len; i++) {
 		if (line[i] == '"') {
@@ -280,6 +352,18 @@ void put_values_text(MyHashMap *obj, char *line, char *buffer)
 	}
 }
 
+/*
+ * @params
+ * text - the current line of input
+ * obj - the hashmap
+ * fp - the file descriptor
+ * buffer - all the text from the input file untill this moment
+ *
+ * @values
+ * The value of this function is:
+ * Depends on the line it will call the define, undef or replace
+ * function
+ */
 void help_ifdef(char *text, MyHashMap *obj, FILE *fp, char *buffer)
 {
 	if (strncmp(text, "#define", 7) == 0) {
@@ -294,6 +378,20 @@ void help_ifdef(char *text, MyHashMap *obj, FILE *fp, char *buffer)
 	}
 }
 
+/*
+ * @params
+ * text - the current line of input
+ * obj - the hashmap
+ * fp - file descriptor of the input file
+ * buffer - all the text from the input file untill this moment
+ * type - is one of the params which will say what function will
+ * call : if, ifdef, ifndef
+ *
+ * @value
+ * The value of this function is:
+ * It will evaluate all the line between the if, ifndef, ifdef
+ * and it will evaluate also the else or elif lines
+ */
 void resolve_ifdef_ifndef(char *text, MyHashMap *obj, FILE *fp,
 						char *buffer, int type)
 {
@@ -423,6 +521,21 @@ void resolve_ifdef_ifndef(char *text, MyHashMap *obj, FILE *fp,
 	resolve_ifdef_ifndef(text, obj, fp, buffer, 3);
 }
 
+/*
+ * @params
+ * line - the current line of the input
+ * buffer - all the text from the input file untill this moment
+ * fp - the file descriptor for the current input file
+ * input_file - the name of the #include directory
+ * directories - all the files from the -I directive
+ *
+ * @value
+ * The value of this function is:
+ * At the final of this function we will have all the text from
+ * the name of the #include directive, replaced in original file
+ * and also it will be replaced with all the #define directive values
+ * and also will evaluate all the if, ifdef, ifndef directives
+ */
 int resolve_include(char *line, MyHashMap *obj, char *buffer, FILE *fp,
 			char *input_file,
 			char directories[NR_DIRECTORIES][LENGTH_NAME_DIRECTORY])
@@ -492,6 +605,19 @@ int resolve_include(char *line, MyHashMap *obj, char *buffer, FILE *fp,
 	return 1;
 }
 
+/*
+ * @params
+ * fp - the current fiel descriptor from input file
+ * obj - the hashmap
+ * buffer - all the text from the input file untill this moment
+ * input_file - the name of the input file
+ * directories - all the directories from the -I directive
+ *
+ * @value
+ * The value of tthis function is:
+ * This functions takes line by line and evaluate each line
+ * Depends of the line it will call the specific function
+ */
 int read_from_file(FILE *fp, MyHashMap *obj, char *buffer,
 			char *input_file,
 			char directories[NR_DIRECTORIES][LENGTH_NAME_DIRECTORY])
@@ -546,6 +672,18 @@ int read_from_file(FILE *fp, MyHashMap *obj, char *buffer,
 	return 1;
 }
 
+/*
+ * @params
+ * input_file - the name of the input file
+ * obj - the hashmap
+ * directories - the files from the -I directives
+ *
+ * @values
+ * The value of this function is:
+ * This function opens the input file
+ * This function calls the read_from_file function
+ * This function return the text replaced and evaluated
+ */
 int open_input(char *input_file, MyHashMap *obj,
 			char directories[NR_DIRECTORIES][LENGTH_NAME_DIRECTORY])
 {
@@ -565,7 +703,7 @@ int open_input(char *input_file, MyHashMap *obj,
 		return 0;
 	}
 
-	strncat(buffer, "\n", BUFFER_SIZE);
+	strncat(buffer, "\n", 1);
 	ans = (char *)get(obj, "output");
 	if (ans) {
 		fo = fopen(ans, "w");
@@ -573,7 +711,7 @@ int open_input(char *input_file, MyHashMap *obj,
 			fclose(fp);
 			return 0;
 		}
-		strncat(buffer, "\n", BUFFER_SIZE);
+		strncat(buffer, "\n", 1);
 		fprintf(fo, "%s", buffer);
 		fclose(fo);
 	} else {

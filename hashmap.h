@@ -8,8 +8,7 @@
 
 #define KEY_SIZE 100
 #define VALUE_SIZE 100
-#define MAP_LEN 1000
-
+#define MAP_LEN 130
 
 	/*
 	 * Data stored in hashmap
@@ -33,7 +32,7 @@ typedef struct {
 	 */
 int hash(char *str);
 MyHashMap *create(void);
-void put(MyHashMap *obj, char *key, char *value);
+int put(MyHashMap *obj, char *key, char *value);
 void *get(MyHashMap *obj, char *key);
 void free_map(MyHashMap *obj);
 void removeVal(MyHashMap *obj, char *key);

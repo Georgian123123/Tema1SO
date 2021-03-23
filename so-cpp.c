@@ -8,6 +8,7 @@ int main(int argc, char *argv[])
 	char *answer = NULL;
 	char directories[NR_DIRECTORIES][LENGTH_NAME_DIRECTORY] = {0};
 	char line[LINE_SIZE] = {0};
+
 	size_directory = 0;
 	/*
 	 *	Create the map and verify if it fails
@@ -21,7 +22,8 @@ int main(int argc, char *argv[])
 	/*
 	 * Get the params from the command line
 	 */
-	check_params(argc, argv, my_hash_map, directories);
+	if (check_params(argc, argv, my_hash_map, directories) == 0)
+		return 0;
 
 	answer = (char *)get(my_hash_map, "input");
 	if (answer) {
